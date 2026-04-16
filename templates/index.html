@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaidya Patient Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #0f172a; color: white; }
+        .glow {
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+            transition: all 0.3s ease;
+        }
+        .glow:hover {
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.8);
+            transform: scale(1.05);
+        }
+        .anim-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
+
+    <!-- Decorative background blobs -->
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-40"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-30"></div>
+
+    <div class="z-10 text-center max-w-2xl px-6">
+        <h1 class="text-6xl md:text-8xl font-black mb-6 tracking-tight mt-10">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-teal-400">Vaidya</span>
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 mb-12 font-light leading-relaxed">
+            Experience the AI Voice Agent built for rural adherence and triage. Click the microphone below to initiate a live voice call directly in your browser.
+        </p>
+
+        <!-- VAPI Button -->
+        <button id="vapi-call-button" class="glow bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-full w-24 h-24 flex items-center justify-center mx-auto cursor-pointer focus:outline-none">
+            <svg id="mic-icon" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+            </svg>
+            <svg id="stop-icon" class="w-10 h-10 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+            </svg>
+        </button>
+        <p id="status-text" class="mt-6 text-indigo-300 font-medium">Click to Start Medical Call</p>
+
+        <div class="mt-20">
+            <a href="/dashboard" class="inline-flex items-center px-8 py-4 bg-indigo-600/20 text-indigo-300 border border-indigo-500/50 rounded-full font-bold uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)]">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Enter Administrator Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Vapi SDK Script -->
+    <script type="module">
+        import Vapi from "https://esm.sh/@vapi-ai/web";
+
+        // --- HACKATHON SETUP CREDENTIALS --- //
+        const VAPI_PUBLIC_KEY = "63ff12a0-067a-428a-a677-f07f2eab1cea"; 
+        const ASSISTANT_ID = "7ab8f5f4-8cb6-48fd-b082-fcb220cc991a";
+
+        const vapiInstance = new Vapi(VAPI_PUBLIC_KEY);
+
+        const button = document.getElementById('vapi-call-button');
+        const micIcon = document.getElementById('mic-icon');
+        const stopIcon = document.getElementById('stop-icon');
+        const statusText = document.getElementById('status-text');
+        
+        let callActive = false;
+
+        button.addEventListener('click', () => {
+            if (!callActive) {
+                // Start Call
+                vapiInstance.start(ASSISTANT_ID);
+                callActive = true;
+                statusText.innerText = "Connecting to Voice Agent...";
+                button.classList.add('anim-pulse');
+                button.classList.replace('from-indigo-600', 'from-red-500');
+                button.classList.replace('to-indigo-500', 'to-red-400');
+                micIcon.classList.add('hidden');
+                stopIcon.classList.remove('hidden');
+            } else {
+                // End Call
+                vapiInstance.stop();
+                callActive = false;
+                statusText.innerText = "Call Ended. Click to Call Again.";
+                button.classList.remove('anim-pulse');
+                button.classList.replace('from-red-500', 'from-indigo-600');
+                button.classList.replace('to-red-400', 'to-indigo-500');
+                stopIcon.classList.add('hidden');
+                micIcon.classList.remove('hidden');
+            }
+        });
+
+        // Event listeners for Vapi state
+        vapiInstance.on('call-start', () => {
+            statusText.innerText = "Call Connected! Speak now.";
+        });
+        vapiInstance.on('call-end', () => {
+            callActive = false;
+            statusText.innerText = "Call Ended. Click to Call Again.";
+            button.classList.remove('anim-pulse');
+            button.classList.replace('from-red-500', 'from-indigo-600');
+            button.classList.replace('to-red-400', 'to-indigo-500');
+            stopIcon.classList.add('hidden');
+            micIcon.classList.remove('hidden');
+        });
+        vapiInstance.on('error', (e) => {
+            console.error(e);
+            statusText.innerText = "Error connecting to call.";
+        });
+    </script>
+</body>
+</html>
